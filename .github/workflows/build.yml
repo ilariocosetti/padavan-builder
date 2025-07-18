@@ -1,6 +1,8 @@
 name: Build firmware
+
 on:
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -11,22 +13,29 @@ jobs:
       BUILDER_CLEANUP: false
       BUILDER_RESET: false
     steps:
-    - uses: actions/checkout@v4
-    - name: Create post_build script
-      run: |
-        echo '
-        for v in "${!CONFIG_@}" "${!FW_@}"; do
-          echo "$v=${!v}" >> $GITHUB_ENV
-        done
-        ' >> post_build.sh
-    - name: Build firmware
-      run: ./build.sh
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.CONFIG_VENDOR }}_${{ env.FW_NAME }}
-        retention-days: 7
-        path: |
-          ${{ env.FW_FILE_NAME }}
-          build.conf
-          build.config
+      - uses: actions/checkout@v4
+
+      - name: Clone full Padavan firmware source
+        run: |
+          git clone --depth=1 https://github.com/hanwckf/rt-n56u.git padavan-ng
+
+      - name: Create post_build script
+        run: |
+          echo '
+          for v in "${!CONFIG_@}" "${!FW_@}"; do
+            echo "$v=${!v}" >> $GITHUB_ENV
+          done
+          ' >> post_build.sh
+
+      - name: Build firmware
+        run: ./build.sh
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.CONFIG_VENDOR }}_${{ env.FW_NAME }}
+          retention-days: 7
+          path: |
+            ${{ env.FW_FILE_NAME }}
+            build.conf
+            build.config
